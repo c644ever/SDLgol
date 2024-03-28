@@ -145,14 +145,16 @@ void drawWorld( void ) {
 		for ( y=0 ; y < FELDH ; y++ ) {
 			s=getWelt(x,y);
 	
-			switch (s) {
+			switch (s) 
+			{
 				case 0	: r=50 	; g=0   ; b=0   ; break ;
 				case 255: r=189	; g=255 ; b=255	; break ;
 			}
-			rect.y=( x * BLOCKSIZE ) ; 
-			rect.x=( y * BLOCKSIZE ) ; 
-			rect.w= BLOCKSIZE-1 ;
-			rect.h= BLOCKSIZE-1 ;
+			
+			rect.y= x * BLOCKSIZE ; 
+			rect.x= y * BLOCKSIZE ; 
+			rect.w= BLOCKSIZE - 1 ;
+			rect.h= BLOCKSIZE - 1 ;
 			SDL_SetRenderDrawColor(renderer,r,g,b,255);
 			SDL_RenderFillRect(renderer, &rect);
 		}
@@ -176,18 +178,18 @@ void pressed( void )
 	}
 }
 
-
 /*
 	init SDL
 
 	Fill World with random numbers
 
-	Count Neighbors
+	Count Neighbors of all cells
 	Decide if dead or alive
 	set new World
 	
 */
-int main( void ){
+int main( void )
+{
 	int ticks=0 ;
 	int x,y ; 
 	int oldliving[10]={ 0 } , living=0; ;
@@ -222,8 +224,10 @@ int main( void ){
 
 		for (x=0 ; x<FELDW ; x++) {
 			for (y=0 ; y<FELDH ; y++) {
-				setWelt(x,y,buffer[x][y]);
-				if (buffer[x][y]==LIVE) living++ ;
+				unsigned char value=buffer[x][y] ;
+				setWelt(x,y,value);
+				if (value==LIVE) living++ ;
+				buf[x][y]=0;
 			}
 		}
 
