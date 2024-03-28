@@ -1,3 +1,16 @@
+/*
+	My simple Interpretation of Conways Game of Life
+
+	* playfield is wrap around
+	* Rules are implemented
+	* Avioding pointers
+	* Using SDL to draw the playfield
+
+	Have fun!
+*/
+
+// include needed stuff
+
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,6 +18,8 @@
 #include <time.h>
 
 #define QUITKEY 	SDLK_ESCAPE
+
+// Constants
 #define WIDTH 		400
 #define HIGHT 		400
 #define BLOCKSIZE 	4
@@ -16,11 +31,6 @@
 
 //global vars
 int quit=0;
-
-//    neigbors:        0      1     2     3     4     5     6     7     8
-bool ruledeath[9] = { true  ,true ,false,false,true ,true ,true ,true ,true  } ;
-bool rulebirth[9] = { false ,false,false,true ,false,false,false,false,false } ;
-
 	
 //SDL Declaration
 int errorCount=0 ;
@@ -29,11 +39,18 @@ SDL_Renderer* renderer;
 SDL_Event event;
 SDL_Rect rect, source, destination, dst;
 
-//Declarations
+//Declarations for Life
 
 unsigned char welt[FELDH][FELDW] = {0};
 unsigned char buffer[FELDH][FELDW] = {0} ;
 
+// The Conway Rules
+//    neigbors:        0      1     2     3     4     5     6     7     8
+bool ruledeath[9] = { true  ,true ,false,false,true ,true ,true ,true ,true  } ;
+bool rulebirth[9] = { false ,false,false,true ,false,false,false,false,false } ;
+
+
+// Reading out of the World
 unsigned char getWelt (int x,int y)
 {
 	if (x<0) x=FELDW-1 ;
@@ -44,6 +61,7 @@ unsigned char getWelt (int x,int y)
 	return (welt[x][y]);
 }
 
+//writing to the World
 void setWelt (int x, int y, unsigned char value)
 {
 	if (x<0) x=FELDW-1 ;
@@ -54,7 +72,8 @@ void setWelt (int x, int y, unsigned char value)
 	welt[x][y]=value ;
 }
 
-void initFeld () {
+// init with World Random
+void initWorld (void) {
 	int x,y ;
 	
 	for (x=0 ; x < FELDW ; x++ )
@@ -66,27 +85,29 @@ void initFeld () {
 	}
 }
 
-
+// Counting the Neigbors of a cell
 int countNeighbors( int x, int y ) {
 	
 	int lebend=0;
+
+	//Brute Force! possible optimation - because cells are read out twice
 	
 	//check Nordost
-	if ( getWelt(x-1,y-1) == LIVE ) { lebend++ ; }
+	if ( getWelt(x-1,y-1) ) { lebend++ ; }
 	//check Nord
-	if ( getWelt(x  ,y-1) == LIVE ) { lebend++ ; }
+	if ( getWelt(x  ,y-1) ) { lebend++ ; }
 	//check Nordwest
-	if ( getWelt(x+1,y-1) == LIVE ) { lebend++ ; }
+	if ( getWelt(x+1,y-1) ) { lebend++ ; }
 	//check Ost
-	if ( getWelt(x-1,y  ) == LIVE ) { lebend++ ; }
+	if ( getWelt(x-1,y  ) ) { lebend++ ; }
 	//check West
-	if ( getWelt(x+1,y  ) == LIVE ) { lebend++ ; }
+	if ( getWelt(x+1,y  ) ) { lebend++ ; }
 	//check Südost
-	if ( getWelt(x-1,y+1) == LIVE ) { lebend++ ; }
+	if ( getWelt(x-1,y+1) ) { lebend++ ; }
 	//check Süd
-	if ( getWelt(x  ,y+1) == LIVE ) { lebend++ ; }
+	if ( getWelt(x  ,y+1) ) { lebend++ ; }
 	//check Südwest
-	if ( getWelt(x+1,y+1) == LIVE ) { lebend++ ; }
+	if ( getWelt(x+1,y+1) ) { lebend++ ; }
 
 	return (lebend);
 }
@@ -115,7 +136,7 @@ void ExitClean() {
 	SDL_Quit();
 }
 
-void drawFeld( void ) {
+void drawWorld( void ) {
 
 	int x,y,r,g,b ;
 	unsigned char s;
@@ -139,23 +160,51 @@ void drawFeld( void ) {
 	SDL_RenderPresent(renderer);
 }
 
+void pressed( void ) 
+{
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type) 
+		{				
+			case SDL_QUIT:
+				quit = 1;
+			break;
+				
+			default:
+			break;	
+		}
+	}
+}
+
+
+/*
+	init SDL
+
+	Fill World with random numbers
+
+	Count Neighbors
+	Decide if dead or alive
+	set new World
+	
+*/
 int main( void ){
-	int quit=0;
 	int ticks=0 ;
 	int x,y ; 
 	int oldliving[10]={ 0 } , living=0; ;
 	
-	initFeld();
+	initWorld();
 
-	//diffrent rule
-	// ruledeath[5] = false ;
-	// rulebirth[2] = true ;
-
+	// put different rules here
+	/*
+	ruledeath[5] = false ;
+	rulebirth[2] = true ;
+	*/
+	
 	InitSetup();
 	
 	while(quit==0)
 	{
-		drawFeld();
+		drawWorld();
 		ticks++ ;
 
 		for (x=0 ; x <FELDW ; x++) {
@@ -185,70 +234,12 @@ int main( void ){
 		oldliving=living;
 		living=0;
 		*/
+
+		pressed();
+		if (ticks>10000) quit=1;
 		
 	}
 
 	ExitClean();
 	return (0);
-}
-
-int pressed ( void ) {
-	int k=0 ;
-	
-	while (SDL_PollEvent(&event))
-	{
-		switch (event.type) {
-			case SDL_KEYDOWN:
-				switch(event.key.keysym.sym){
-					case SDLK_LEFT:
-						k=1 ;
-					break;
-					case SDLK_RIGHT:
-						k=2 ;
-					break;
-					case SDLK_a:
-						k=4 ;
-					break;
-					case SDLK_s:
-						k=8 ;
-					break;
-					case SDLK_DOWN:
-						k=16 ;
-					break;
-					default:
-						k=0 ;
-					break;
-				}
-			break;
-				
-			case SDL_KEYUP:  
-				switch(event.key.keysym.sym){
-					case SDLK_LEFT:
-						k=0 ;
-					break;
-					case SDLK_RIGHT:
-						k=0 ;
-					break;
-					case SDLK_a:
-						k=0 ;
-					break;
-					case SDLK_s:
-						k=0 ;
-					break;
-					case SDLK_DOWN:
-						k=0 ;
-					default:
-					break;
-				}
-			break;
-				
-			case SDL_QUIT:
-				quit = 1;
-			break;
-				
-			default:
-			break;	
-		}
-	}
-	return (k) ;
 }
