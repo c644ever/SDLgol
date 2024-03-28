@@ -20,9 +20,9 @@
 #define QUITKEY 	SDLK_ESCAPE
 
 // Constants
-#define WIDTH 		400
-#define HIGHT 		400
-#define BLOCKSIZE 	4
+#define WIDTH 		800
+#define HIGHT 		800
+#define BLOCKSIZE 	8
 #define FELDH 		HIGHT/BLOCKSIZE
 #define FELDW 		WIDTH/BLOCKSIZE
 
@@ -51,25 +51,14 @@ bool rulebirth[9] = { false ,false,false,true ,false,false,false,false,false } ;
 
 
 // Reading out of the World
-unsigned char getWelt (int x,int y)
+unsigned char getWelt (int x,int y )
 {
-	if (x<0) x=FELDW-1 ;
-	if (y<0) y=FELDH-1 ;
-	if (x>FELDW-1) x=0;
-	if (y>FELDH-1) y=0;
+	if ( x < 0 ) x = FELDW-1 ;
+	if ( y < 0 ) y = FELDH-1 ;
+	if ( x == FELDW ) x = 0 ;
+	if ( y == FELDH ) y = 0 ;
 
 	return (welt[x][y]);
-}
-
-//writing to the World
-void setWelt (int x, int y, unsigned char value)
-{
-	if (x<0) x=FELDW-1 ;
-	if (y<0) y=FELDH-1 ;
-	if (x>FELDW-1) x=0;
-	if (y>FELDH-1) y=0;
-
-	welt[x][y]=value ;
 }
 
 // init with World Random
@@ -80,7 +69,7 @@ void initWorld (void) {
 	{
 		for ( y=0 ; y < FELDH ; y++ )
 		{
-			setWelt(x,y, (rand() % 2)*255 ) ;
+			welt[x][y] = ( rand() % 2 ) * 255 ;
 		}
 	}
 }
@@ -90,23 +79,24 @@ int countNeighbors( int x, int y ) {
 	
 	int lebend=0;
 
-	//Brute Force! possible optimation - because cells are read out twice
+	// Hier kann es zu array out of bounds kommen - daher getWet funktion für den Zugriff
+	// Brute Force! possible optimation - because some cells are read out twice
 	
-	//check Nordost
+	// check Nordost
 	if ( getWelt(x-1,y-1) ) { lebend++ ; }
-	//check Nord
+	// check Nord
 	if ( getWelt(x  ,y-1) ) { lebend++ ; }
-	//check Nordwest
+	// check Nordwest
 	if ( getWelt(x+1,y-1) ) { lebend++ ; }
-	//check Ost
+	// check Ost
 	if ( getWelt(x-1,y  ) ) { lebend++ ; }
-	//check West
+	// check West
 	if ( getWelt(x+1,y  ) ) { lebend++ ; }
-	//check Südost
+	// check Südost
 	if ( getWelt(x-1,y+1) ) { lebend++ ; }
-	//check Süd
+	// check Süd
 	if ( getWelt(x  ,y+1) ) { lebend++ ; }
-	//check Südwest
+	// check Südwest
 	if ( getWelt(x+1,y+1) ) { lebend++ ; }
 
 	return (lebend);
@@ -143,18 +133,17 @@ void drawWorld( void ) {
 	
 	for (x=0 ; x < FELDW ; x++ ) {
 		for ( y=0 ; y < FELDH ; y++ ) {
-			s=getWelt(x,y);
+			s=welt[x][y];
 	
-			switch (s) 
-			{
+			switch (s) {
 				case 0	: r=50 	; g=0   ; b=0   ; break ;
 				case 255: r=189	; g=255 ; b=255	; break ;
 			}
 			
 			rect.y= x * BLOCKSIZE ; 
 			rect.x= y * BLOCKSIZE ; 
-			rect.w= BLOCKSIZE - 1 ;
-			rect.h= BLOCKSIZE - 1 ;
+			rect.w= BLOCKSIZE-1 ;
+			rect.h= BLOCKSIZE-1 ;
 			SDL_SetRenderDrawColor(renderer,r,g,b,255);
 			SDL_RenderFillRect(renderer, &rect);
 		}
@@ -178,12 +167,13 @@ void pressed( void )
 	}
 }
 
+
 /*
 	init SDL
 
 	Fill World with random numbers
 
-	Count Neighbors of all cells
+	Count Neighbors
 	Decide if dead or alive
 	set new World
 	
@@ -192,7 +182,7 @@ int main( void )
 {
 	int ticks=0 ;
 	int x,y ; 
-	int oldliving[10]={ 0 } , living=0; ;
+	int living=0 ;	
 	
 	initWorld();
 
@@ -218,30 +208,26 @@ int main( void )
 				else if ( rulebirth[n] )
 					buffer[x][y]=LIVE ;
 				else
-					buffer[x][y]=getWelt(x,y);
+					buffer[x][y]=welt[x][y];
 			}
 		}
 
 		for (x=0 ; x<FELDW ; x++) {
 			for (y=0 ; y<FELDH ; y++) {
-				unsigned char value=buffer[x][y] ;
-				setWelt(x,y,value);
-				if (value==LIVE) living++ ;
-				buf[x][y]=0;
+				unsigned char tmp ;
+				 
+				tmp = buffer[x][y];
+				buffer[x][y]=0;
+
+				welt[x][y]=tmp ;
+				if ( tmp==LIVE) living++ ;
+				
 			}
 		}
 
-		// Abbruchbedingung
-		/*
-		if (living==oldliving) quit=1 ;
-		printf ("%d %d\n",oldliving,living );
-		oldliving=living;
-		living=0;
-		*/
-
 		pressed();
+
 		if (ticks>10000) quit=1;
-		
 	}
 
 	ExitClean();
